@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe - Player vs Player or AI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #acb6e5);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      grid-gap: 15px;
+      background: #ffffff30;
+      padding: 15px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .cell {
+      width: 120px;
+      height: 120px;
+      background: #fff;
+      border-radius: 12px;
+      font-size: 60px;
+      color: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .cell:hover {
+      background: #f0f0f0;
+      transform: scale(1.05);
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #222;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 10px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4e91fc;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2e71e5;
+    }
+
+    .mode-selector {
+      margin: 10px 0;
+      font-size: 18px;
+    }
+
+    @media (max-width: 500px) {
+      .board {
+        grid-template-columns: repeat(3, 90px);
+      }
+
+      .cell {
+        width: 90px;
+        height: 90px;
+        font-size: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe</h1>
+  <div class="mode-selector">
+    <label><input type="radio" name="mode" value="pvp" checked> Player vs Player</label>
+    <label><input type="radio" name="mode" value="pva"> Player vs AI</label>
+  </div>
+  <div class="board" id="board"></div>
+  <p id="status">Player 1 (X)'s turn</p>
+  <button onclick="resetGame()">Restart Game</button>
+
+  <script>
+    const board = document.getElementById('board');
+    const status = document.getElementById('status');
+    const modeSelector = document.querySelectorAll('input[name="mode"]');
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let gameMode = 'pvp'; // Default mode is Player vs Player
+    const cells = [];
+
+    const winCombos = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    function createBoard() {
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', handleClick);
+        board.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+
+    function handleClick(e) {
+      const cell = e.target;
+      const index = cell.dataset.index;
+
+      if (!gameActive || cell.textContent !== '') return;
+
+      cell.textContent = currentPlayer;
+
+      if (checkWin(currentPlayer)) {
+        status.textContent = `🎉 Player ${currentPlayer} wins!`;
+        gameActive = false;
+        return;
+      }
+
+      if (cells.every(c => c.textContent !== '')) {
+        status.textContent = "🤝 It's a tie!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      if (gameMode === 'pva' && currentPlayer === 'O') {
+        aiMove();
+      } else {
+        status.textContent = currentPlayer === 'X' ? "Player 1 (X)'s turn" : "Player 2 (O)'s turn";
+      }
+    }
+
+    function aiMove() {
+      const availableCells = cells.filter(cell => cell.textContent === '');
+      const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+      randomCell.textContent = 'O';
+
+      if (checkWin('O')) {
+        status.textContent = `🎉 Player O wins!`;
+        gameActive = false;
+        return;
+      }
+
+      if (cells.every(c => c.textContent !== '')) {
+        status.textContent = "🤝 It's a tie!";
+        gameActive = false;
+        return;
+      }
+
+      currentPlayer = 'X';
+      status.textContent = "Player 1 (X)'s turn";
+    }
+
+    function checkWin(player) {
+      return winCombos.some(combo =>
+        combo.every(index => cells[index].textContent === player)
+      );
+    }
+
+    function resetGame() {
+      cells.forEach(cell => cell.textContent = '');
+      currentPlayer = 'X';
+      gameActive = true;
+      status.textContent = "Player 1 (X)'s turn";
+    }
+
+    function changeMode() {
+      gameMode = Array.from(modeSelector).find(mode => mode.checked).value;
+      resetGame();
+    }
+
+    modeSelector.forEach(selector => selector.addEventListener('change', changeMode));
+
+    createBoard();
+  </script>
+
+</body>
+</html>
